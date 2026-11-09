@@ -1,0 +1,26 @@
+import { z } from "zod";
+const schema = z.object({
+  NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
+  PORT: z.coerce.number().default(8080),
+  WEB_URL: z.string().url(),
+  FIREBASE_PROJECT_ID: z.string().min(1),
+  FIREBASE_CLIENT_EMAIL: z.string().optional(),
+  FIREBASE_PRIVATE_KEY: z.string().optional(),
+  AI_PROVIDER: z.enum(["gemini"]).default("gemini"),
+  GEMINI_API_KEY: z.string().optional(),
+  GEMINI_MODEL: z.string().optional(),
+  DARAJA_ENV: z.enum(["sandbox", "production"]).default("sandbox"),
+  DARAJA_CONSUMER_KEY: z.string().optional(),
+  DARAJA_CONSUMER_SECRET: z.string().optional(),
+  DARAJA_SHORTCODE: z.string().optional(),
+  DARAJA_PASSKEY: z.string().optional(),
+  API_URL: z.string().url(),
+  RESEND_API_KEY: z.string().optional(),
+  EMAIL_FROM: z.string().optional(),
+  RECONCILE_SECRET: z.string().min(16).optional(),
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
+  BAKERY_AUTO_APPROVE: z.enum(["true", "false"]).default("true"),
+  GOOGLE_MAPS_SERVER_KEY: z.string().optional(),
+  MPESA_CALLBACK_SECRET: z.string().min(16),
+});
+export const env = schema.parse(process.env);

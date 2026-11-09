@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /business
+Disallow: /admin
+Disallow: /checkout
+Disallow: /orders
+Disallow: /account
+Disallow: /notifications
+# Replace with your real domain before launch:
+Sitemap: https://YOUR-DOMAIN/sitemap.xml

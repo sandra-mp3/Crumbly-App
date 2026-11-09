@@ -1,0 +1,22 @@
+{
+ "name": "crumbly",
+ "private": true,
+ "workspaces": [
+  "apps/*"
+ ],
+ "engines": {
+  "node": ">=20.6"
+ },
+ "scripts": {
+  "dev": "concurrently -n api,web -c yellow,green \"npm run dev -w @crumbly/api\" \"npm run dev -w @crumbly/web\"",
+  "emulators": "firebase emulators:start --project crumbly-dev",
+  "seed": "npm run seed -w @crumbly/api",
+  "typecheck": "npm run typecheck -w @crumbly/api -w @crumbly/web",
+  "test": "npm test -w @crumbly/api",
+  "build": "npm run build -w @crumbly/api -w @crumbly/web"
+ },
+ "devDependencies": {
+  "concurrently": "^9.0.0",
+  "firebase-tools": "^13.0.0"
+ }
+}

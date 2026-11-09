@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function memberDoc(b) { return /databases/$(db)/documents/bakeryMembers/$(request.auth.uid + '_' + b); }
+    function member(b) { return signedIn() && exists(memberDoc(b)) && get(memberDoc(b)).data.active == true; }
+    function manager(b) { return member(b) && get(memberDoc(b)).data.role in ['BAKER_OWNER', 'BAKER_MANAGER']; }
+    function isAdmin() { return signedIn() && request.auth.token.role == 'ADMIN'; }
+
+    // Clients can only READ. Every write goes through the API (Admin SDK), which validates and authorises it.
+    // This stops a manager from, say, setting their own bakery to 'active' or faking product ratings from the browser.
+    match /bakeries/{b} {
+      allow read: if resource.data.status == 'active' || member(b) || isAdmin();
+      allow write: if false;
+      match /inventory/{i} { allow read: if member(b); allow write: if false; }
+      match /analytics/{a} { allow read: if manager(b); allow write: if false; }
+    }
+    match /products/{p} { allow read: if resource.data.status == 'published' || member(resource.data.bakeryId); allow write: if false; }
+    match /reviews/{r} { allow read: if true; allow write: if false; }
+
+    match /users/{u} { allow read: if signedIn() && request.auth.uid == u; allow write: if false; }
+    match /carts/{u} { allow read: if signedIn() && request.auth.uid == u; allow write: if false; }
+    match /favorites/{f} { allow read: if signedIn() && resource.data.uid == request.auth.uid; allow write: if false; }
+    match /customOrders/{c} { allow read: if signedIn() && (resource.data.customerId == request.auth.uid || member(resource.data.bakeryId)); allow write: if false; }
+    match /orders/{o} { allow read: if signedIn() && (resource.data.customerId == request.auth.uid || member(resource.data.bakeryId) || isAdmin()); allow write: if false; }
+    match /bakeryMembers/{m} { allow read: if signedIn() && resource.data.uid == request.auth.uid; allow write: if false; }
+    match /payments/{p} { allow read, write: if false; }        // Admin SDK only (Daraja callbacks)
+    match /aiConversations/{c} { allow read, write: if false; }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

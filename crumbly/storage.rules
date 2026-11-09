@@ -1,0 +1,29 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Product photos: public read; only members of that bakery can upload small images.
+    match /products/{bakeryId}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && firestore.exists(/databases/(default)/documents/bakeryMembers/$(request.auth.uid + '_' + bakeryId))
+        && firestore.get(/databases/(default)/documents/bakeryMembers/$(request.auth.uid + '_' + bakeryId)).data.active == true
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+    // Bakery logo and cover photos
+    match /bakeries/{bakeryId}/{file} {
+      allow read: if true;
+      allow write: if request.auth != null
+        && firestore.exists(/databases/(default)/documents/bakeryMembers/$(request.auth.uid + '_' + bakeryId))
+        && firestore.get(/databases/(default)/documents/bakeryMembers/$(request.auth.uid + '_' + bakeryId)).data.active == true
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+    // Custom cake inspiration photos: only the owner can upload; the download link is shared with the bakery in the request.
+    match /inspiration/{uid}/{file} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null && request.auth.uid == uid && request.resource.size < 5 * 1024 * 1024 && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+    match /{allPaths=**} { allow read, write: if false; }
+  }
+}
